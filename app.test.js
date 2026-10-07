@@ -20,6 +20,31 @@ test('GET /api/products lists the products', async () => {
   assert.deepEqual(Object.keys(body.products[0]), ['id', 'title', 'price', 'stock']);
 });
 
+test('GET /api/products?q= filters by title, case-insensitive', async () => {
+  for (const q of ['tote', 'TOTE', 'nVaS']) {
+    const { status, body } = await get(`/api/products?q=${q}`);
+    assert.equal(status, 200);
+    assert.deepEqual(body.products.map((p) => p.title), ['Canvas Tote']);
+  }
+});
+
+test('GET /api/products?q= with no match returns an empty list', async () => {
+  const { status, body } = await get('/api/products?q=hoodie');
+  assert.equal(status, 200);
+  assert.deepEqual(body.products, []);
+});
+
+test('GET /api/products with an empty q returns every product', async () => {
+  const { body } = await get('/api/products?q=');
+  assert.equal(body.products.length, 3);
+});
+
+test('GET /health still works', async () => {
+  const { status, body } = await get('/health');
+  assert.equal(status, 200);
+  assert.deepEqual(body, { ok: true });
+});
+
 test('unknown path is 404', async () => {
   const { status, body } = await get('/nope');
   assert.equal(status, 404);
